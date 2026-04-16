@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasir — KasirKu POS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        surface:'#0f0f0f', card:'#1a1a1a', border:'#2a2a2a',
+        accent:'#10b981','accent-soft':'#064e3b', muted:'#6b7280', bright:'#f9fafb',
+      },
+      fontFamily: { sans:['DM Sans','sans-serif'], mono:['DM Mono','monospace'] }
+    }
+  }
+}
+</script>
+<style>
+  body { background:#0f0f0f; }
+  .card { background:#1a1a1a; border:1px solid #2a2a2a; }
+  .sidebar-link { transition:all 0.15s; }
+  .sidebar-link:hover { background:#064e3b; color:#10b981; }
+  .product-card { transition:all 0.15s; cursor:pointer; }
+  .product-card:hover { border-color:#10b981; transform:translateY(-1px); }
+  .product-card:active { transform:scale(0.97); }
+  .btn-pay { background:linear-gradient(135deg,#10b981,#059669); }
+  .btn-pay:hover { background:linear-gradient(135deg,#059669,#047857); }
+  .btn-pay:disabled { background:#2a2a2a; cursor:not-allowed; }
+  .cart-item { animation: slideIn 0.2s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:translateX(0)} }
+  .input-field { background:#1a1a1a; border:1px solid #2a2a2a; color:#f9fafb; }
+  .input-field:focus { border-color:#10b981; outline:none; }
+  .category-tab { transition:all 0.15s; }
+  .category-tab.active { background:#064e3b; color:#10b981; }
+  /* Print struk */
+  @media print {
+    body > *:not(#receiptPrint) { display:none !important; }
+    #receiptPrint { display:block !important; }
+  }
+</style>
+</head>
+<body class="font-sans text-bright min-h-screen flex">
+
+<!-- Sidebar (desktop) -->
+<aside class="hidden md:flex flex-col w-56 min-h-screen card border-r border-border fixed left-0 top-0 z-30">
+  <div class="p-5 border-b border-border">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#10b981,#059669)">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <span class="font-bold text-sm">KasirKu</span>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1">
+    <a href="dashboard.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/></svg> Dashboard
+    </a>
+    <a href="kasir.html" class="sidebar-link text-accent bg-accent-soft flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg> Kasir
+    </a>
+    <a href="produk.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Produk
+    </a>
+    <a href="transaksi.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg> Transaksi
+    </a>
+    <a href="user.html" id="adminMenu" class="hidden sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> Users
+    </a>
+  </nav>
+  <div class="p-3 border-t border-border">
+    <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-red-400 hover:bg-red-900/20 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Keluar
+    </button>
+  </div>
+</aside>
+
+<!-- Mobile top bar -->
+<div class="md:hidden fixed top-0 left-0 right-0 z-40 card border-b border-border px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-2">
+    <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#10b981,#059669)">
+      <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4"/></svg>
+    </div>
+    <span class="font-bold text-sm">Kasir</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <button onclick="clearCart()" class="text-xs text-muted px-2 py-1 rounded-lg border border-border">Reset</button>
+    <a href="dashboard.html" class="text-muted p-1">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- Main Layout: Desktop split, Mobile stacked -->
+<div class="flex-1 md:ml-56 flex flex-col md:flex-row min-h-screen pt-14 md:pt-0">
+
+  <!-- LEFT: Products -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Search + Categories -->
+    <div class="p-3 md:p-4 border-b border-border" style="background:#0f0f0f">
+      <input id="searchInput" type="text" placeholder="Cari produk..."
+        class="input-field w-full px-4 py-2.5 rounded-xl text-sm mb-3 transition-all"
+        oninput="filterProducts()">
+      <div id="categoryTabs" class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <button onclick="filterByCategory('all')" class="category-tab active whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium border border-border text-muted">Semua</button>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="productGrid" class="flex-1 overflow-y-auto p-3 md:p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 content-start">
+      <div class="col-span-full text-center py-12 text-muted text-sm">Memuat produk...</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Cart (Desktop sidebar / Mobile sticky bottom) -->
+  <!-- Desktop cart -->
+  <div class="hidden md:flex flex-col w-80 card border-l border-border" style="height:100vh;position:sticky;top:0">
+    <div class="p-4 border-b border-border flex items-center justify-between">
+      <h2 class="font-semibold text-sm">Keranjang</h2>
+      <button onclick="clearCart()" class="text-xs text-muted hover:text-red-400 transition-colors">Kosongkan</button>
+    </div>
+
+    <!-- Cart items -->
+    <div id="cartItems" class="flex-1 overflow-y-auto p-3 space-y-2">
+      <div class="text-center py-8 text-muted text-xs" id="emptyCart">
+        <svg class="w-8 h-8 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        Keranjang kosong
+      </div>
+    </div>
+
+    <!-- Payment section -->
+    <div class="p-4 border-t border-border space-y-3">
+      <div class="flex justify-between text-sm">
+        <span class="text-muted">Subtotal</span>
+        <span class="font-mono font-semibold text-bright" id="cartTotal">Rp 0</span>
+      </div>
+
+      <!-- Payment method -->
+      <div>
+        <label class="text-xs text-muted mb-1.5 block">Metode Pembayaran</label>
+        <select id="paymentMethod" class="input-field w-full px-3 py-2 rounded-xl text-sm">
+          <option value="cash">💵 Cash</option>
+          <option value="transfer">🏦 Transfer</option>
+          <option value="ewallet">📱 E-Wallet</option>
+        </select>
+      </div>
+
+      <!-- Cash input -->
+      <div id="cashSection">
+        <label class="text-xs text-muted mb-1.5 block">Uang Bayar</label>
+        <input id="cashInput" type="number" placeholder="0" oninput="calcChange()"
+          class="input-field w-full px-3 py-2 rounded-xl text-sm font-mono">
+        <div class="flex justify-between text-sm mt-2">
+          <span class="text-muted text-xs">Kembalian</span>
+          <span class="font-mono text-sm font-bold text-accent" id="changeAmount">Rp 0</span>
+        </div>
+        <!-- Quick cash buttons -->
+        <div class="grid grid-cols-3 gap-1.5 mt-2" id="quickCash"></div>
+      </div>
+
+      <button onclick="processPayment()" id="payBtn"
+        class="btn-pay w-full py-3 rounded-xl text-white font-bold text-sm transition-all active:scale-95 disabled:opacity-50">
+        💳 Bayar Sekarang
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile: Cart toggle button -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-30" id="mobileCartBar">
+    <div class="card border-t border-border p-3" id="mobileCartSummary">
+      <div class="flex items-center justify-between mb-3">
+        <button onclick="toggleMobileCart()" class="flex items-center gap-2 text-sm font-semibold">
+          <span class="w-5 h-5 rounded-full bg-accent text-white text-xs flex items-center justify-center font-bold" id="mobileCartCount">0</span>
+          Keranjang
+          <svg id="cartChevron" class="w-4 h-4 text-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+        </button>
+        <span class="font-mono font-bold text-accent" id="mobileTotal">Rp 0</span>
+      </div>
+      <button onclick="showMobilePayment()" class="btn-pay w-full py-3 rounded-xl text-white font-bold text-sm active:scale-95">
+        💳 Bayar
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Cart Drawer -->
+  <div id="mobileCartDrawer" class="md:hidden fixed inset-x-0 bottom-0 z-40 hidden" style="top:60px">
+    <div class="absolute inset-0 bg-black/50" onclick="toggleMobileCart()"></div>
+    <div class="absolute inset-x-0 bottom-0 card rounded-t-2xl max-h-[70vh] flex flex-col" style="border-top:1px solid #2a2a2a">
+      <div class="p-4 border-b border-border flex items-center justify-between">
+        <h3 class="font-semibold text-sm">Keranjang</h3>
+        <button onclick="toggleMobileCart()" class="text-muted"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <div id="mobileCartItems" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+      <div class="p-4 border-t border-border">
+        <div class="flex justify-between text-sm mb-3">
+          <span class="text-muted">Total</span>
+          <span class="font-mono font-bold" id="mobileCartTotal">Rp 0</span>
+        </div>
+        <button onclick="showMobilePayment()" class="btn-pay w-full py-3 rounded-xl text-white font-bold text-sm">Lanjut Bayar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Payment Modal -->
+<div id="mobilePayModal" class="md:hidden fixed inset-0 z-50 hidden flex items-end">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMobilePayment()"></div>
+  <div class="relative w-full card rounded-t-2xl p-5 space-y-4">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="font-semibold">Pembayaran</h3>
+      <button onclick="closeMobilePayment()" class="text-muted"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="flex justify-between text-sm">
+      <span class="text-muted">Total</span>
+      <span class="font-mono font-bold text-accent text-lg" id="mobilePayTotal">Rp 0</span>
+    </div>
+    <div>
+      <label class="text-xs text-muted mb-1.5 block">Metode Pembayaran</label>
+      <select id="mobilePaymentMethod" class="input-field w-full px-3 py-2.5 rounded-xl text-sm"
+        onchange="toggleMobileCash()">
+        <option value="cash">💵 Cash</option>
+        <option value="transfer">🏦 Transfer</option>
+        <option value="ewallet">📱 E-Wallet</option>
+      </select>
+    </div>
+    <div id="mobileCashSection">
+      <label class="text-xs text-muted mb-1.5 block">Uang Bayar</label>
+      <input id="mobileCashInput" type="number" placeholder="0" oninput="calcMobileChange()"
+        class="input-field w-full px-3 py-3 rounded-xl text-sm font-mono text-lg">
+      <div class="flex justify-between mt-2">
+        <span class="text-xs text-muted">Kembalian</span>
+        <span class="font-mono font-bold text-accent" id="mobileChange">Rp 0</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mt-3" id="mobileQuickCash"></div>
+    </div>
+    <button onclick="processPaymentMobile()" class="btn-pay w-full py-3.5 rounded-xl text-white font-bold text-base active:scale-95">
+      ✅ Konfirmasi Bayar
+    </button>
+  </div>
+</div>
+
+<!-- Receipt Print Template -->
+<div id="receiptPrint" style="display:none" class="p-4 font-mono text-sm text-black bg-white">
+  <div class="text-center mb-4">
+    <h2 class="font-bold text-lg">KasirKu POS</h2>
+    <p id="rptDate" class="text-xs"></p>
+    <p id="rptId" class="text-xs"></p>
+  </div>
+  <div id="rptItems" class="mb-3 border-t border-b border-dashed py-2 space-y-1"></div>
+  <div class="space-y-1">
+    <div class="flex justify-between font-bold"><span>TOTAL</span><span id="rptTotal"></span></div>
+    <div class="flex justify-between"><span>Bayar</span><span id="rptPay"></span></div>
+    <div class="flex justify-between"><span>Kembalian</span><span id="rptChange"></span></div>
+    <div class="flex justify-between"><span>Metode</span><span id="rptMethod"></span></div>
+  </div>
+  <div class="text-center mt-4 text-xs">Terima kasih!</div>
+</div>
+
+<script src="app.js"></script>
+<script>
+let products = [];
+let cart = [];
+let filteredProducts = [];
+let activeCategory = 'all';
+let currentSession = null;
+
+async function initKasir() {
+  currentSession = await requireAuth();
+  if (!currentSession) return;
+  if (localStorage.getItem('userRole') === 'admin') {
+    document.getElementById('adminMenu').classList.remove('hidden');
+  }
+  await loadProducts();
+  document.getElementById('paymentMethod').addEventListener('change', toggleCashSection);
+  buildQuickCash();
+}
+
+async function loadProducts() {
+  const { data, error } = await sb.from('products').select('*').order('name');
+  if (error) return showToast('Gagal memuat produk', 'error');
+  products = data || [];
+  filteredProducts = [...products];
+
+  // Categories
+  const cats = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
+  const tabsEl = document.getElementById('categoryTabs');
+  tabsEl.innerHTML = cats.map(c => `
+    <button onclick="filterByCategory('${c}')"
+      class="category-tab ${c === activeCategory ? 'active' : 'text-muted border-border'} whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium border">
+      ${c === 'all' ? 'Semua' : c}
+    </button>
+  `).join('');
+
+  renderProducts();
+}
+
+function filterByCategory(cat) {
+  activeCategory = cat;
+  document.querySelectorAll('.category-tab').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === (cat === 'all' ? 'Semua' : cat));
+    b.classList.toggle('text-muted', b.textContent.trim() !== (cat === 'all' ? 'Semua' : cat));
+  });
+  filterProducts();
+}
+
+function filterProducts() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  filteredProducts = products.filter(p => {
+    const matchCat = activeCategory === 'all' || p.category === activeCategory;
+    const matchQ = p.name.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+  renderProducts();
+}
+
+function renderProducts() {
+  const grid = document.getElementById('productGrid');
+  if (!filteredProducts.length) {
+    grid.innerHTML = '<div class="col-span-full text-center py-12 text-muted text-sm">Produk tidak ditemukan</div>';
+    return;
+  }
+  grid.innerHTML = filteredProducts.map(p => `
+    <div class="product-card card rounded-2xl p-3 flex flex-col gap-2 ${p.stock <= 0 ? 'opacity-40 pointer-events-none' : ''}"
+      onclick="addToCart(${p.id})">
+      ${p.image_url
+        ? `<img src="${p.image_url}" alt="${p.name}" class="w-full aspect-square object-cover rounded-xl" loading="lazy">`
+        : `<div class="w-full aspect-square rounded-xl flex items-center justify-center text-3xl" style="background:#2a2a2a">🍵</div>`
+      }
+      <div>
+        <p class="text-xs font-semibold text-bright leading-tight line-clamp-2">${p.name}</p>
+        <p class="text-xs text-muted mt-0.5">${p.category || '—'}</p>
+        <div class="flex items-center justify-between mt-1.5">
+          <span class="text-sm font-bold text-accent font-mono">${formatRp(p.price)}</span>
+          ${p.stock <= 5 ? `<span class="text-xs text-amber-400">${p.stock} sisa</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addToCart(productId) {
+  const product = products.find(p => p.id === productId);
+  if (!product || product.stock <= 0) return;
+
+  const existing = cart.find(i => i.id === productId);
+  const currentQty = existing ? existing.qty : 0;
+
+  if (currentQty >= product.stock) {
+    return showToast(`Stok ${product.name} tidak cukup`, 'warn');
+  }
+
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ id: product.id, name: product.name, price: product.price, qty: 1, stock: product.stock });
+  }
+  renderCart();
+  showToast(`${product.name} ditambahkan`, 'success');
+}
+
+function updateQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  renderCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
+  renderCart();
+}
+
+function clearCart() {
+  cart = [];
+  renderCart();
+}
+
+function getTotal() {
+  return cart.reduce((s, i) => s + i.price * i.qty, 0);
+}
+
+function renderCart() {
+  const total = getTotal();
+  const isEmpty = cart.length === 0;
+
+  // Desktop
+  const itemsEl = document.getElementById('cartItems');
+  document.getElementById('emptyCart').style.display = isEmpty ? 'block' : 'none';
+
+  const existingItems = itemsEl.querySelectorAll('.cart-item');
+  existingItems.forEach(e => e.remove());
+
+  cart.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'cart-item flex items-center gap-2 p-2.5 rounded-xl hover:bg-black/20 transition-colors';
+    div.innerHTML = `
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-medium text-bright truncate">${item.name}</p>
+        <p class="text-xs font-mono text-accent">${formatRp(item.price)}</p>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button onclick="updateQty(${item.id},-1)" class="w-6 h-6 rounded-lg border border-border text-xs text-muted hover:text-bright hover:border-accent flex items-center justify-center transition-all">−</button>
+        <span class="text-sm font-bold w-5 text-center">${item.qty}</span>
+        <button onclick="updateQty(${item.id},1)" class="w-6 h-6 rounded-lg border border-border text-xs text-muted hover:text-bright hover:border-accent flex items-center justify-center transition-all">+</button>
+        <button onclick="removeFromCart(${item.id})" class="w-6 h-6 rounded-lg text-xs text-red-400 hover:bg-red-900/30 flex items-center justify-center ml-1">✕</button>
+      </div>
+    `;
+    itemsEl.appendChild(div);
+  });
+
+  document.getElementById('cartTotal').textContent = formatRp(total);
+  calcChange();
+
+  // Mobile
+  document.getElementById('mobileCartCount').textContent = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('mobileTotal').textContent = formatRp(total);
+  document.getElementById('mobileCartTotal').textContent = formatRp(total);
+  document.getElementById('mobilePayTotal').textContent = formatRp(total);
+
+  const mobileItemsEl = document.getElementById('mobileCartItems');
+  mobileItemsEl.innerHTML = cart.map(item => `
+    <div class="flex items-center gap-2 p-2.5 rounded-xl border border-border">
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-medium text-bright truncate">${item.name}</p>
+        <p class="text-xs font-mono text-accent">${formatRp(item.price * item.qty)}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="updateQty(${item.id},-1)" class="w-7 h-7 rounded-xl border border-border text-sm text-muted flex items-center justify-center">−</button>
+        <span class="text-sm font-bold w-5 text-center">${item.qty}</span>
+        <button onclick="updateQty(${item.id},1)" class="w-7 h-7 rounded-xl border border-border text-sm text-muted flex items-center justify-center">+</button>
+      </div>
+    </div>
+  `).join('') || '<p class="text-xs text-muted text-center py-4">Keranjang kosong</p>';
+}
+
+function calcChange() {
+  const cash = Number(document.getElementById('cashInput').value);
+  const total = getTotal();
+  const change = cash - total;
+  document.getElementById('changeAmount').textContent = formatRp(Math.max(0, change));
+  document.getElementById('changeAmount').style.color = change < 0 ? '#f87171' : '#10b981';
+}
+
+function calcMobileChange() {
+  const cash = Number(document.getElementById('mobileCashInput').value);
+  const total = getTotal();
+  const change = cash - total;
+  document.getElementById('mobileChange').textContent = formatRp(Math.max(0, change));
+  document.getElementById('mobileChange').style.color = change < 0 ? '#f87171' : '#10b981';
+}
+
+function toggleCashSection() {
+  const method = document.getElementById('paymentMethod').value;
+  document.getElementById('cashSection').style.display = method === 'cash' ? 'block' : 'none';
+}
+
+function toggleMobileCash() {
+  const method = document.getElementById('mobilePaymentMethod').value;
+  document.getElementById('mobileCashSection').style.display = method === 'cash' ? 'block' : 'none';
+}
+
+function buildQuickCash() {
+  const total = getTotal();
+  const options = [10000, 20000, 50000, 100000, 50000*Math.ceil(total/50000)];
+  const unique = [...new Set(options)].filter(v => v >= total).slice(0, 3);
+  document.getElementById('quickCash').innerHTML = unique.map(v => `
+    <button onclick="document.getElementById('cashInput').value=${v};calcChange()"
+      class="text-xs px-2 py-1.5 rounded-lg border border-border text-muted hover:text-bright hover:border-accent transition-all font-mono">
+      ${v >= 1000000 ? (v/1000000) + 'jt' : (v/1000) + 'rb'}
+    </button>
+  `).join('');
+
+  document.getElementById('mobileQuickCash').innerHTML = unique.map(v => `
+    <button onclick="document.getElementById('mobileCashInput').value=${v};calcMobileChange()"
+      class="text-sm px-3 py-2 rounded-xl border border-border text-muted hover:text-bright hover:border-accent transition-all font-mono">
+      ${v >= 1000000 ? (v/1000000) + 'jt' : (v/1000) + 'rb'}
+    </button>
+  `).join('');
+}
+
+function toggleMobileCart() {
+  const drawer = document.getElementById('mobileCartDrawer');
+  const chevron = document.getElementById('cartChevron');
+  drawer.classList.toggle('hidden');
+  chevron.style.transform = drawer.classList.contains('hidden') ? '' : 'rotate(180deg)';
+}
+
+function showMobilePayment() {
+  if (!cart.length) return showToast('Keranjang kosong', 'warn');
+  document.getElementById('mobileCartDrawer').classList.add('hidden');
+  document.getElementById('mobilePayModal').classList.remove('hidden');
+  document.getElementById('mobilePayModal').classList.add('flex');
+  buildQuickCash();
+}
+
+function closeMobilePayment() {
+  document.getElementById('mobilePayModal').classList.add('hidden');
+  document.getElementById('mobilePayModal').classList.remove('flex');
+}
+
+async function doPayment(method, cashPaid) {
+  if (!cart.length) return showToast('Keranjang kosong', 'warn');
+  const total = getTotal();
+
+  if (method === 'cash') {
+    const cash = Number(cashPaid);
+    if (cash < total) return showToast('Uang bayar kurang!', 'error');
+  }
+
+  const btn = document.getElementById('payBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Memproses...'; }
+
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    const { data: trx, error: trxErr } = await sb.from('transactions').insert({
+      total, payment_method: method, user_id: user.id
+    }).select().single();
+    if (trxErr) throw trxErr;
+
+    const items = cart.map(i => ({
+      transaction_id: trx.id,
+      product_id: i.id,
+      qty: i.qty,
+      price: i.price
+    }));
+    await sb.from('transaction_items').insert(items);
+
+    // Update stock
+    for (const i of cart) {
+      const prod = products.find(p => p.id === i.id);
+      if (prod) await sb.from('products').update({ stock: prod.stock - i.qty }).eq('id', i.id);
+    }
+
+    // Print receipt
+    printReceipt(trx, method, cashPaid, total);
+
+    showToast('✅ Pembayaran berhasil!', 'success');
+    clearCart();
+    await loadProducts();
+    closeMobilePayment();
+  } catch (err) {
+    showToast('Gagal menyimpan transaksi: ' + err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💳 Bayar Sekarang'; }
+  }
+}
+
+async function processPayment() {
+  const method = document.getElementById('paymentMethod').value;
+  const cash = document.getElementById('cashInput').value;
+  await doPayment(method, cash);
+  document.getElementById('cashInput').value = '';
+  calcChange();
+}
+
+async function processPaymentMobile() {
+  const method = document.getElementById('mobilePaymentMethod').value;
+  const cash = document.getElementById('mobileCashInput').value;
+  await doPayment(method, cash);
+  document.getElementById('mobileCashInput').value = '';
+}
+
+function printReceipt(trx, method, cashPaid, total) {
+  document.getElementById('rptDate').textContent = new Date().toLocaleString('id-ID');
+  document.getElementById('rptId').textContent = '#' + trx.id.slice(-8).toUpperCase();
+  document.getElementById('rptItems').innerHTML = cart.map(i =>
+    `<div class="flex justify-between"><span>${i.name} x${i.qty}</span><span>${formatRp(i.price * i.qty)}</span></div>`
+  ).join('');
+  document.getElementById('rptTotal').textContent = formatRp(total);
+  document.getElementById('rptPay').textContent = method === 'cash' ? formatRp(cashPaid) : method;
+  document.getElementById('rptChange').textContent = method === 'cash' ? formatRp(Math.max(0, cashPaid - total)) : '-';
+  document.getElementById('rptMethod').textContent = method;
+
+  setTimeout(() => window.print(), 200);
+}
+
+initKasir();
+</script>
+</body>
+</html>

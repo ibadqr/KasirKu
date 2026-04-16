@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — KasirKu POS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        surface:'#0f0f0f', card:'#1a1a1a', border:'#2a2a2a',
+        accent:'#10b981','accent-soft':'#064e3b', muted:'#6b7280', bright:'#f9fafb',
+      },
+      fontFamily: { sans:['DM Sans','sans-serif'], mono:['DM Mono','monospace'] }
+    }
+  }
+}
+</script>
+<style>
+  body { background:#0f0f0f; }
+  .card { background:#1a1a1a; border:1px solid #2a2a2a; }
+  .sidebar-link { transition:all 0.15s; }
+  .sidebar-link:hover { background:#064e3b; color:#10b981; }
+  .sidebar-link.active { background:#064e3b; color:#10b981; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .fade-up { animation:fadeUp 0.4s ease forwards; }
+  .stat-card { transition:transform 0.2s; }
+  .stat-card:hover { transform:translateY(-2px); }
+</style>
+</head>
+<body class="font-sans text-bright min-h-screen flex">
+
+<!-- Sidebar (desktop) -->
+<aside class="hidden md:flex flex-col w-56 min-h-screen card border-r border-border fixed left-0 top-0 z-30">
+  <div class="p-5 border-b border-border">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#10b981,#059669)">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <span class="font-bold text-sm text-bright">KasirKu</span>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1">
+    <a href="dashboard.html" data-nav="dashboard" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Dashboard
+    </a>
+    <a href="kasir.html" data-nav="kasir" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      Kasir
+    </a>
+    <a href="produk.html" data-nav="produk" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Produk
+    </a>
+    <a href="transaksi.html" data-nav="transaksi" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Transaksi
+    </a>
+    <a href="user.html" data-nav="user" id="adminMenu" class="hidden sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      Users
+    </a>
+  </nav>
+  <div class="p-3 border-t border-border">
+    <div class="flex items-center gap-2 mb-3 px-3 py-2">
+      <div class="w-7 h-7 rounded-full bg-accent-soft flex items-center justify-center text-accent text-xs font-bold" id="avatarInitial">K</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-medium text-bright truncate" id="sidebarEmail">kasir@cafe.com</p>
+        <p class="text-xs text-muted capitalize" id="sidebarRole">kasir</p>
+      </div>
+    </div>
+    <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-red-400 hover:bg-red-900/20 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Keluar
+    </button>
+  </div>
+</aside>
+
+<!-- Mobile top bar -->
+<div class="md:hidden fixed top-0 left-0 right-0 z-40 card border-b border-border px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-2">
+    <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#10b981,#059669)">
+      <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4"/></svg>
+    </div>
+    <span class="font-bold text-sm">KasirKu</span>
+  </div>
+  <button onclick="toggleMobileMenu()" class="text-muted p-1">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+</div>
+
+<!-- Mobile menu -->
+<div id="mobileMenu" class="md:hidden fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
+  <div class="absolute right-0 top-0 h-full w-64 card p-4 flex flex-col">
+    <div class="flex items-center justify-between mb-4">
+      <span class="font-bold">Menu</span>
+      <button onclick="toggleMobileMenu()" class="text-muted"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <nav class="space-y-1 flex-1">
+      <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-accent bg-accent-soft">Dashboard</a>
+      <a href="kasir.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-bright">Kasir</a>
+      <a href="produk.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-bright">Produk</a>
+      <a href="transaksi.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-bright">Transaksi</a>
+      <a href="user.html" id="mobileAdminMenu" class="hidden flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-bright">Users</a>
+    </nav>
+    <button onclick="handleLogout()" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-900/20">Keluar</button>
+  </div>
+</div>
+
+<!-- Main content -->
+<main class="flex-1 md:ml-56 pt-16 md:pt-0 min-h-screen">
+  <div class="p-4 md:p-6 max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6 fade-up">
+      <h1 class="text-xl font-bold text-bright">Dashboard</h1>
+      <p class="text-muted text-sm mt-0.5" id="dateLabel">—</p>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="stat-card card rounded-2xl p-4 fade-up">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs text-muted font-medium">Penjualan Hari Ini</span>
+          <div class="w-7 h-7 rounded-lg bg-emerald-900/50 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+        <p class="text-lg font-bold text-bright font-mono" id="todaySales">Rp 0</p>
+        <p class="text-xs text-muted mt-1" id="salesGrowth">—</p>
+      </div>
+      <div class="stat-card card rounded-2xl p-4 fade-up">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs text-muted font-medium">Transaksi</span>
+          <div class="w-7 h-7 rounded-lg bg-blue-900/50 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+        </div>
+        <p class="text-lg font-bold text-bright font-mono" id="todayTrx">0</p>
+        <p class="text-xs text-muted mt-1">transaksi hari ini</p>
+      </div>
+      <div class="stat-card card rounded-2xl p-4 fade-up">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs text-muted font-medium">Produk Terjual</span>
+          <div class="w-7 h-7 rounded-lg bg-orange-900/50 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+        </div>
+        <p class="text-lg font-bold text-bright font-mono" id="todayItems">0</p>
+        <p class="text-xs text-muted mt-1">item terjual</p>
+      </div>
+      <div class="stat-card card rounded-2xl p-4 fade-up">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs text-muted font-medium">Total Produk</span>
+          <div class="w-7 h-7 rounded-lg bg-purple-900/50 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          </div>
+        </div>
+        <p class="text-lg font-bold text-bright font-mono" id="totalProducts">0</p>
+        <p class="text-xs text-muted mt-1">produk aktif</p>
+      </div>
+    </div>
+
+    <!-- Chart + Recent -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Chart -->
+      <div class="md:col-span-2 card rounded-2xl p-5 fade-up">
+        <h3 class="text-sm font-semibold text-bright mb-4">Penjualan 7 Hari Terakhir</h3>
+        <div class="relative h-44">
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent transactions -->
+      <div class="card rounded-2xl p-5 fade-up">
+        <h3 class="text-sm font-semibold text-bright mb-4">Transaksi Terbaru</h3>
+        <div id="recentTrx" class="space-y-3">
+          <p class="text-xs text-muted">Memuat data...</p>
+        </div>
+        <a href="transaksi.html" class="mt-4 block text-xs text-accent hover:text-emerald-400 transition-colors">Lihat semua →</a>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="mt-4 grid grid-cols-2 gap-3 fade-up">
+      <a href="kasir.html" class="card rounded-2xl p-4 flex items-center gap-3 hover:border-accent transition-all group cursor-pointer">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#10b981,#059669)">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-bright group-hover:text-accent transition-colors">Buka Kasir</p>
+          <p class="text-xs text-muted">Mulai transaksi</p>
+        </div>
+      </a>
+      <a href="produk.html" class="card rounded-2xl p-4 flex items-center gap-3 hover:border-accent transition-all group cursor-pointer">
+        <div class="w-10 h-10 rounded-xl bg-blue-900/50 flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-bright group-hover:text-accent transition-colors">Tambah Produk</p>
+          <p class="text-xs text-muted">Kelola produk</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+let salesChart;
+
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('hidden');
+}
+
+async function loadDashboard() {
+  const session = await requireAuth();
+  if (!session) return;
+
+  const role = localStorage.getItem('userRole');
+  const email = localStorage.getItem('userEmail') || session.user.email;
+
+  document.getElementById('sidebarEmail').textContent = email;
+  document.getElementById('sidebarRole').textContent = role;
+  document.getElementById('avatarInitial').textContent = email[0].toUpperCase();
+
+  if (role === 'admin') {
+    document.getElementById('adminMenu').classList.remove('hidden');
+    document.getElementById('mobileAdminMenu').classList.remove('hidden');
+  }
+
+  const now = new Date();
+  document.getElementById('dateLabel').textContent = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  const todayStr = now.toISOString().split('T')[0];
+  const startOfDay = todayStr + 'T00:00:00';
+  const endOfDay   = todayStr + 'T23:59:59';
+
+  // Today stats
+  const { data: todayTrx } = await sb.from('transactions')
+    .select('total, transaction_items(qty)')
+    .gte('created_at', startOfDay).lte('created_at', endOfDay);
+
+  const totalSales = todayTrx?.reduce((s, t) => s + Number(t.total), 0) || 0;
+  const totalItems = todayTrx?.reduce((s, t) => s + (t.transaction_items?.reduce((a, i) => a + i.qty, 0) || 0), 0) || 0;
+
+  document.getElementById('todaySales').textContent = formatRp(totalSales);
+  document.getElementById('todayTrx').textContent = todayTrx?.length || 0;
+  document.getElementById('todayItems').textContent = totalItems;
+
+  // Products count
+  const { count } = await sb.from('products').select('*', { count:'exact', head:true });
+  document.getElementById('totalProducts').textContent = count || 0;
+
+  // Recent transactions
+  const { data: recent } = await sb.from('transactions')
+    .select('id, total, payment_method, created_at')
+    .order('created_at', { ascending:false }).limit(5);
+
+  const recentEl = document.getElementById('recentTrx');
+  if (recent?.length) {
+    recentEl.innerHTML = recent.map(t => `
+      <div class="flex items-center justify-between py-2 border-b border-border last:border-0">
+        <div>
+          <p class="text-xs font-medium text-bright">${formatRp(t.total)}</p>
+          <p class="text-xs text-muted">${t.payment_method} · ${new Date(t.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</p>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-900/50 text-accent font-mono">#${t.id.slice(-4)}</span>
+      </div>
+    `).join('');
+  } else {
+    recentEl.innerHTML = '<p class="text-xs text-muted">Belum ada transaksi hari ini</p>';
+  }
+
+  // 7-day chart
+  const days7 = [];
+  const labels = [];
+  const amounts = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    labels.push(d.toLocaleDateString('id-ID', { weekday:'short' }));
+    days7.push(ds);
+  }
+
+  for (const ds of days7) {
+    const { data: dayTrx } = await sb.from('transactions')
+      .select('total').gte('created_at', ds + 'T00:00:00').lte('created_at', ds + 'T23:59:59');
+    amounts.push(dayTrx?.reduce((s, t) => s + Number(t.total), 0) || 0);
+  }
+
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  if (salesChart) salesChart.destroy();
+  salesChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: amounts,
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16,185,129,0.08)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#10b981',
+        pointRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { grid:{ color:'#2a2a2a' }, ticks:{ color:'#6b7280', font:{size:10} } },
+        y: { grid:{ color:'#2a2a2a' }, ticks:{ color:'#6b7280', font:{size:10}, callback: v => 'Rp ' + (v/1000).toFixed(0) + 'k' } }
+      }
+    }
+  });
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

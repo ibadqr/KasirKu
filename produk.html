@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produk — KasirKu POS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        surface:'#0f0f0f', card:'#1a1a1a', border:'#2a2a2a',
+        accent:'#10b981','accent-soft':'#064e3b', muted:'#6b7280', bright:'#f9fafb',
+      },
+      fontFamily: { sans:['DM Sans','sans-serif'], mono:['DM Mono','monospace'] }
+    }
+  }
+}
+</script>
+<style>
+  body { background:#0f0f0f; }
+  .card { background:#1a1a1a; border:1px solid #2a2a2a; }
+  .sidebar-link { transition:all 0.15s; }
+  .sidebar-link:hover { background:#064e3b; color:#10b981; }
+  .sidebar-link.active { background:#064e3b; color:#10b981; }
+  .input-field { background:#141414; border:1px solid #2a2a2a; color:#f9fafb; transition:all 0.15s; }
+  .input-field:focus { border-color:#10b981; outline:none; box-shadow:0 0 0 3px rgba(16,185,129,0.08); }
+  .btn-primary { background:linear-gradient(135deg,#10b981,#059669); transition:all 0.15s; }
+  .btn-primary:hover { background:linear-gradient(135deg,#059669,#047857); transform:translateY(-1px); }
+  .btn-primary:active { transform:scale(0.97); }
+  .product-row { transition:all 0.15s; }
+  .product-row:hover { background:#1f1f1f; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .fade-up { animation:fadeUp 0.35s ease forwards; }
+  .modal-overlay { backdrop-filter:blur(4px); }
+</style>
+</head>
+<body class="font-sans text-bright min-h-screen flex">
+
+<!-- Sidebar -->
+<aside class="hidden md:flex flex-col w-56 min-h-screen card border-r border-border fixed left-0 top-0 z-30">
+  <div class="p-5 border-b border-border">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#10b981,#059669)">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <span class="font-bold text-sm">KasirKu</span>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1">
+    <a href="dashboard.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/></svg> Dashboard
+    </a>
+    <a href="kasir.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg> Kasir
+    </a>
+    <a href="produk.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Produk
+    </a>
+    <a href="transaksi.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg> Transaksi
+    </a>
+    <a href="user.html" id="adminMenu" class="hidden sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> Users
+    </a>
+  </nav>
+  <div class="p-3 border-t border-border">
+    <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-red-400 hover:bg-red-900/20 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Keluar
+    </button>
+  </div>
+</aside>
+
+<!-- Mobile bar -->
+<div class="md:hidden fixed top-0 left-0 right-0 z-40 card border-b border-border px-4 py-3 flex items-center justify-between">
+  <span class="font-bold text-sm">Produk</span>
+  <div class="flex gap-2">
+    <button onclick="openModal()" class="btn-primary px-3 py-1.5 rounded-xl text-white text-xs font-semibold">+ Tambah</button>
+    <a href="dashboard.html" class="text-muted p-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></a>
+  </div>
+</div>
+
+<!-- Main -->
+<main class="flex-1 md:ml-56 pt-16 md:pt-0 min-h-screen">
+  <div class="p-4 md:p-6 max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6 fade-up">
+      <div>
+        <h1 class="text-xl font-bold text-bright">Manajemen Produk</h1>
+        <p class="text-muted text-sm mt-0.5" id="productCount">Memuat...</p>
+      </div>
+      <button onclick="openModal()" class="hidden md:flex btn-primary items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        Tambah Produk
+      </button>
+    </div>
+
+    <!-- Search & filter -->
+    <div class="flex gap-3 mb-4 fade-up">
+      <input id="searchInput" type="text" placeholder="Cari produk..." oninput="filterProducts()"
+        class="input-field flex-1 px-4 py-2.5 rounded-xl text-sm">
+      <select id="categoryFilter" onchange="filterProducts()" class="input-field px-3 py-2.5 rounded-xl text-sm">
+        <option value="">Semua Kategori</option>
+      </select>
+    </div>
+
+    <!-- Product grid (cards on mobile, table on desktop) -->
+    <!-- Mobile cards -->
+    <div id="productCards" class="md:hidden grid grid-cols-2 gap-3 fade-up"></div>
+
+    <!-- Desktop table -->
+    <div class="hidden md:block card rounded-2xl overflow-hidden fade-up">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border">
+            <th class="text-left px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">Produk</th>
+            <th class="text-left px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">Kategori</th>
+            <th class="text-right px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">Harga</th>
+            <th class="text-center px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">Stok</th>
+            <th class="px-5 py-3.5"></th>
+          </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+      </table>
+      <div id="tableEmpty" class="hidden text-center py-12 text-muted text-sm">Tidak ada produk</div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal Tambah/Edit Produk -->
+<div id="modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay" style="background:rgba(0,0,0,0.7)">
+  <div class="card rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-bold text-bright" id="modalTitle">Tambah Produk</h3>
+      <button onclick="closeModal()" class="text-muted hover:text-bright transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <input type="hidden" id="editId">
+      <div>
+        <label class="block text-xs font-medium text-muted mb-1.5">Nama Produk *</label>
+        <input id="fName" type="text" placeholder="Nama produk..." class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-muted mb-1.5">Harga *</label>
+          <input id="fPrice" type="number" placeholder="15000" class="input-field w-full px-4 py-2.5 rounded-xl text-sm font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-muted mb-1.5">Stok *</label>
+          <input id="fStock" type="number" placeholder="100" class="input-field w-full px-4 py-2.5 rounded-xl text-sm font-mono">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-muted mb-1.5">Kategori</label>
+        <input id="fCategory" type="text" placeholder="Minuman, Makanan, Snack..." class="input-field w-full px-4 py-2.5 rounded-xl text-sm" list="categoryList">
+        <datalist id="categoryList"></datalist>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-muted mb-1.5">URL Gambar (opsional)</label>
+        <input id="fImage" type="url" placeholder="https://..." class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
+      </div>
+      <!-- Image preview -->
+      <div id="imgPreview" class="hidden">
+        <img id="imgPreviewEl" class="w-full h-32 object-cover rounded-xl" alt="">
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-border text-sm font-medium text-muted hover:text-bright transition-colors">Batal</button>
+      <button onclick="saveProduct()" id="saveBtn" class="flex-1 btn-primary py-2.5 rounded-xl text-white text-sm font-semibold">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7)">
+  <div class="card rounded-2xl p-6 w-full max-w-sm">
+    <div class="w-12 h-12 rounded-2xl bg-red-900/40 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </div>
+    <h3 class="text-center font-bold text-bright mb-1">Hapus Produk?</h3>
+    <p class="text-center text-sm text-muted mb-5" id="deleteProductName">—</p>
+    <div class="flex gap-3">
+      <button onclick="closeDeleteModal()" class="flex-1 py-2.5 rounded-xl border border-border text-sm text-muted hover:text-bright">Batal</button>
+      <button onclick="confirmDelete()" class="flex-1 py-2.5 rounded-xl bg-red-900/60 text-red-300 text-sm font-semibold hover:bg-red-800/60">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+let products = [];
+let filteredProducts = [];
+let deleteTargetId = null;
+
+async function initProduk() {
+  await requireAuth();
+  if (localStorage.getItem('userRole') === 'admin') document.getElementById('adminMenu').classList.remove('hidden');
+  await loadProducts();
+
+  // Image preview
+  document.getElementById('fImage').addEventListener('input', function() {
+    const url = this.value;
+    if (url) {
+      document.getElementById('imgPreviewEl').src = url;
+      document.getElementById('imgPreview').classList.remove('hidden');
+    } else {
+      document.getElementById('imgPreview').classList.add('hidden');
+    }
+  });
+}
+
+async function loadProducts() {
+  const { data, error } = await sb.from('products').select('*').order('created_at', { ascending:false });
+  if (error) return showToast('Gagal memuat produk', 'error');
+  products = data || [];
+  filteredProducts = [...products];
+
+  // Categories
+  const cats = [...new Set(products.map(p => p.category).filter(Boolean))];
+  const sel = document.getElementById('categoryFilter');
+  const curVal = sel.value;
+  sel.innerHTML = '<option value="">Semua Kategori</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  sel.value = curVal;
+
+  const dl = document.getElementById('categoryList');
+  dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+
+  document.getElementById('productCount').textContent = `${products.length} produk terdaftar`;
+  filterProducts();
+}
+
+function filterProducts() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('categoryFilter').value;
+  filteredProducts = products.filter(p => {
+    const matchQ = p.name.toLowerCase().includes(q);
+    const matchCat = !cat || p.category === cat;
+    return matchQ && matchCat;
+  });
+  renderProducts();
+}
+
+function renderProducts() {
+  // Mobile cards
+  const cardsEl = document.getElementById('productCards');
+  cardsEl.innerHTML = filteredProducts.length ? filteredProducts.map(p => `
+    <div class="card rounded-2xl p-3">
+      ${p.image_url
+        ? `<img src="${p.image_url}" alt="${p.name}" class="w-full aspect-square object-cover rounded-xl mb-2" loading="lazy">`
+        : `<div class="w-full aspect-square rounded-xl flex items-center justify-center text-2xl mb-2" style="background:#2a2a2a">🍵</div>`
+      }
+      <p class="text-xs font-semibold text-bright leading-tight">${p.name}</p>
+      <p class="text-xs text-muted">${p.category || '—'}</p>
+      <p class="text-sm font-bold text-accent font-mono mt-1">${formatRp(p.price)}</p>
+      <p class="text-xs text-muted">Stok: <span class="${p.stock <= 5 ? 'text-amber-400' : 'text-bright'}">${p.stock}</span></p>
+      <div class="flex gap-2 mt-2">
+        <button onclick="openModal(${p.id})" class="flex-1 py-1.5 rounded-xl border border-border text-xs text-muted hover:text-bright hover:border-accent transition-all">Edit</button>
+        <button onclick="openDeleteModal(${p.id}, '${p.name.replace(/'/g,"\\'")}' )" class="flex-1 py-1.5 rounded-xl border border-red-800/50 text-xs text-red-400 hover:bg-red-900/20 transition-all">Hapus</button>
+      </div>
+    </div>
+  `).join('') : '<div class="col-span-2 text-center py-12 text-muted text-sm">Tidak ada produk</div>';
+
+  // Desktop table
+  const tbody = document.getElementById('productTable');
+  const empty = document.getElementById('tableEmpty');
+  if (!filteredProducts.length) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  tbody.innerHTML = filteredProducts.map(p => `
+    <tr class="product-row border-b border-border last:border-0">
+      <td class="px-5 py-3.5">
+        <div class="flex items-center gap-3">
+          ${p.image_url
+            ? `<img src="${p.image_url}" class="w-9 h-9 rounded-xl object-cover" loading="lazy">`
+            : `<div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg" style="background:#2a2a2a">🍵</div>`
+          }
+          <div>
+            <p class="font-medium text-bright">${p.name}</p>
+            <p class="text-xs text-muted">ID: ${p.id}</p>
+          </div>
+        </div>
+      </td>
+      <td class="px-5 py-3.5">
+        <span class="text-xs px-2.5 py-1 rounded-full font-medium" style="background:#1f2937;color:#9ca3af">${p.category || '—'}</span>
+      </td>
+      <td class="px-5 py-3.5 text-right font-mono font-semibold text-accent">${formatRp(p.price)}</td>
+      <td class="px-5 py-3.5 text-center">
+        <span class="text-sm font-semibold ${p.stock <= 5 ? 'text-amber-400' : p.stock === 0 ? 'text-red-400' : 'text-bright'}">${p.stock}</span>
+      </td>
+      <td class="px-5 py-3.5 text-right">
+        <div class="flex justify-end gap-2">
+          <button onclick="openModal(${p.id})" class="px-3 py-1.5 rounded-xl border border-border text-xs text-muted hover:text-bright hover:border-accent transition-all">Edit</button>
+          <button onclick="openDeleteModal(${p.id}, '${p.name.replace(/'/g,"\\'")}' )" class="px-3 py-1.5 rounded-xl border border-red-800/50 text-xs text-red-400 hover:bg-red-900/20 transition-all">Hapus</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModal(id = null) {
+  const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.getElementById('editId').value = '';
+  document.getElementById('fName').value = '';
+  document.getElementById('fPrice').value = '';
+  document.getElementById('fStock').value = '';
+  document.getElementById('fCategory').value = '';
+  document.getElementById('fImage').value = '';
+  document.getElementById('imgPreview').classList.add('hidden');
+  document.getElementById('modalTitle').textContent = 'Tambah Produk';
+
+  if (id) {
+    const p = products.find(p => p.id === id);
+    if (!p) return;
+    document.getElementById('modalTitle').textContent = 'Edit Produk';
+    document.getElementById('editId').value = p.id;
+    document.getElementById('fName').value = p.name;
+    document.getElementById('fPrice').value = p.price;
+    document.getElementById('fStock').value = p.stock;
+    document.getElementById('fCategory').value = p.category || '';
+    document.getElementById('fImage').value = p.image_url || '';
+    if (p.image_url) {
+      document.getElementById('imgPreviewEl').src = p.image_url;
+      document.getElementById('imgPreview').classList.remove('hidden');
+    }
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+  document.getElementById('modal').classList.remove('flex');
+}
+
+function openDeleteModal(id, name) {
+  deleteTargetId = id;
+  document.getElementById('deleteProductName').textContent = name;
+  document.getElementById('deleteModal').classList.remove('hidden');
+  document.getElementById('deleteModal').classList.add('flex');
+}
+
+function closeDeleteModal() {
+  deleteTargetId = null;
+  document.getElementById('deleteModal').classList.add('hidden');
+  document.getElementById('deleteModal').classList.remove('flex');
+}
+
+async function saveProduct() {
+  const id = document.getElementById('editId').value;
+  const name = document.getElementById('fName').value.trim();
+  const price = Number(document.getElementById('fPrice').value);
+  const stock = Number(document.getElementById('fStock').value);
+  const category = document.getElementById('fCategory').value.trim();
+  const image_url = document.getElementById('fImage').value.trim();
+
+  if (!name || !price || stock === '' || isNaN(stock)) return showToast('Nama, harga, dan stok wajib diisi', 'error');
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  try {
+    const payload = { name, price, stock, category: category || null, image_url: image_url || null };
+    if (id) {
+      const { error } = await sb.from('products').update(payload).eq('id', id);
+      if (error) throw error;
+      showToast('Produk berhasil diperbarui', 'success');
+    } else {
+      const { error } = await sb.from('products').insert(payload);
+      if (error) throw error;
+      showToast('Produk berhasil ditambahkan', 'success');
+    }
+    closeModal();
+    await loadProducts();
+  } catch (err) {
+    showToast('Gagal menyimpan: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simpan';
+  }
+}
+
+async function confirmDelete() {
+  if (!deleteTargetId) return;
+  try {
+    const { error } = await sb.from('products').delete().eq('id', deleteTargetId);
+    if (error) throw error;
+    showToast('Produk dihapus', 'success');
+    closeDeleteModal();
+    await loadProducts();
+  } catch (err) {
+    showToast('Gagal hapus: ' + err.message, 'error');
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+initProduk();
+</script>
+</body>
+</html>

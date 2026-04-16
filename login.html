@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — KasirKu POS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        surface: '#0f0f0f',
+        card: '#1a1a1a',
+        border: '#2a2a2a',
+        accent: '#10b981',
+        'accent-soft': '#064e3b',
+        muted: '#6b7280',
+        bright: '#f9fafb',
+      },
+      fontFamily: { sans: ['DM Sans', 'sans-serif'], mono: ['DM Mono', 'monospace'] }
+    }
+  }
+}
+</script>
+<style>
+  body { background: #0f0f0f; }
+  .glow { box-shadow: 0 0 40px rgba(16,185,129,0.15); }
+  .btn-accent { background: linear-gradient(135deg, #10b981, #059669); }
+  .btn-accent:hover { background: linear-gradient(135deg, #059669, #047857); }
+  .input-field { background: #1a1a1a; border: 1px solid #2a2a2a; color: #f9fafb; }
+  .input-field:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+  .noise { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation: fadeUp 0.6s ease forwards; }
+  .fade-up-2 { animation: fadeUp 0.6s 0.1s ease forwards; opacity:0; }
+  .fade-up-3 { animation: fadeUp 0.6s 0.2s ease forwards; opacity:0; }
+</style>
+</head>
+<body class="font-sans min-h-screen flex items-center justify-center noise p-4">
+
+<!-- Background decoration -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none">
+  <div class="absolute -top-40 -right-40 w-80 h-80 rounded-full" style="background: radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)"></div>
+  <div class="absolute -bottom-40 -left-40 w-96 h-96 rounded-full" style="background: radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)"></div>
+</div>
+
+<div class="w-full max-w-sm relative z-10">
+  <!-- Logo -->
+  <div class="text-center mb-8 fade-up">
+    <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4" style="background: linear-gradient(135deg, #10b981, #059669);">
+      <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold text-bright tracking-tight">KasirKu</h1>
+    <p class="text-muted text-sm mt-1">Point of Sale System</p>
+  </div>
+
+  <!-- Card -->
+  <div class="rounded-2xl p-6 glow fade-up-2" style="background:#1a1a1a; border:1px solid #2a2a2a;">
+    <h2 class="text-lg font-semibold text-bright mb-1">Masuk ke akun</h2>
+    <p class="text-muted text-sm mb-6">Gunakan email & password Anda</p>
+
+    <div id="toast" class="hidden mb-4 p-3 rounded-xl text-sm font-medium"></div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-1.5">Email</label>
+        <input id="email" type="email" placeholder="kasir@cafe.com"
+          class="input-field w-full px-4 py-3 rounded-xl text-sm transition-all">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-1.5">Password</label>
+        <input id="password" type="password" placeholder="••••••••"
+          class="input-field w-full px-4 py-3 rounded-xl text-sm transition-all">
+      </div>
+      <button onclick="handleLogin()" id="loginBtn"
+        class="btn-accent w-full py-3 rounded-xl text-white font-semibold text-sm transition-all duration-200 active:scale-95 mt-2">
+        Masuk
+      </button>
+    </div>
+  </div>
+
+  <p class="text-center text-muted text-xs mt-6 fade-up-3">
+    © 2025 KasirKu · Powered by Supabase
+  </p>
+</div>
+
+<script>
+// ─── SUPABASE CONFIG ───────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://jphbvcldbeqsoandkdus.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwaGJ2Y2xkYmVxc29hbmRrZHVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDA4MzksImV4cCI6MjA5MTkxNjgzOX0.slgqTbwWEF2DNToxWjzdD9eDiIr4l2lp6IyFBsHn6NU';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── CHECK AUTH ─────────────────────────────────────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) window.location.href = 'dashboard.html';
+})();
+
+// ─── TOAST ──────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'error') {
+  const t = document.getElementById('toast');
+  t.className = `mb-4 p-3 rounded-xl text-sm font-medium ${type === 'error' ? 'bg-red-900/50 text-red-300 border border-red-800' : 'bg-emerald-900/50 text-emerald-300 border border-emerald-800'}`;
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 4000);
+}
+
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
+async function handleLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('loginBtn');
+
+  if (!email || !password) return showToast('Email dan password wajib diisi');
+
+  btn.textContent = 'Memproses...';
+  btn.disabled = true;
+
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    // Fetch role
+    const { data: userData } = await sb.from('users').select('role').eq('id', data.user.id).single();
+    localStorage.setItem('userRole', userData?.role || 'kasir');
+    localStorage.setItem('userEmail', data.user.email);
+
+    showToast('Login berhasil! Mengalihkan...', 'success');
+    setTimeout(() => window.location.href = 'dashboard.html', 800);
+  } catch (err) {
+    showToast(err.message || 'Login gagal, cek email & password');
+    btn.textContent = 'Masuk';
+    btn.disabled = false;
+  }
+}
+
+// Enter key
+document.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+</script>
+</body>
+</html>

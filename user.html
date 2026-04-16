@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users — KasirKu POS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        surface:'#0f0f0f', card:'#1a1a1a', border:'#2a2a2a',
+        accent:'#10b981','accent-soft':'#064e3b', muted:'#6b7280', bright:'#f9fafb',
+      },
+      fontFamily: { sans:['DM Sans','sans-serif'], mono:['DM Mono','monospace'] }
+    }
+  }
+}
+</script>
+<style>
+  body { background:#0f0f0f; }
+  .card { background:#1a1a1a; border:1px solid #2a2a2a; }
+  .sidebar-link { transition:all 0.15s; }
+  .sidebar-link:hover { background:#064e3b; color:#10b981; }
+  .sidebar-link.active { background:#064e3b; color:#10b981; }
+  .input-field { background:#141414; border:1px solid #2a2a2a; color:#f9fafb; }
+  .input-field:focus { border-color:#10b981; outline:none; box-shadow:0 0 0 3px rgba(16,185,129,0.08); }
+  .btn-primary { background:linear-gradient(135deg,#10b981,#059669); }
+  .btn-primary:hover { background:linear-gradient(135deg,#059669,#047857); }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .fade-up { animation:fadeUp 0.35s ease forwards; }
+</style>
+</head>
+<body class="font-sans text-bright min-h-screen flex">
+
+<!-- Sidebar -->
+<aside class="hidden md:flex flex-col w-56 min-h-screen card border-r border-border fixed left-0 top-0 z-30">
+  <div class="p-5 border-b border-border">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#10b981,#059669)">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <span class="font-bold text-sm">KasirKu</span>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1">
+    <a href="dashboard.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/></svg> Dashboard</a>
+    <a href="kasir.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg> Kasir</a>
+    <a href="produk.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Produk</a>
+    <a href="transaksi.html" class="sidebar-link text-muted flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg> Transaksi</a>
+    <a href="user.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> Users</a>
+  </nav>
+  <div class="p-3 border-t border-border">
+    <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-red-400 hover:bg-red-900/20 transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Keluar</button>
+  </div>
+</aside>
+
+<!-- Mobile bar -->
+<div class="md:hidden fixed top-0 left-0 right-0 z-40 card border-b border-border px-4 py-3 flex items-center justify-between">
+  <span class="font-bold text-sm">Manajemen User</span>
+  <button onclick="openAddModal()" class="btn-primary px-3 py-1.5 rounded-xl text-white text-xs font-semibold">+ Tambah</button>
+</div>
+
+<!-- Main -->
+<main class="flex-1 md:ml-56 pt-16 md:pt-0 min-h-screen">
+  <div class="p-4 md:p-6 max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6 fade-up">
+      <div>
+        <h1 class="text-xl font-bold text-bright">Manajemen User</h1>
+        <p class="text-muted text-sm mt-0.5" id="userCount">Memuat...</p>
+      </div>
+      <button onclick="openAddModal()" class="hidden md:flex btn-primary items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold active:scale-95 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+        Tambah Kasir
+      </button>
+    </div>
+
+    <!-- Notice -->
+    <div class="card rounded-2xl p-4 mb-4 flex items-start gap-3 fade-up" style="border-color:#854d0e;background:#1c1008">
+      <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div>
+        <p class="text-sm font-medium text-amber-400">Hanya Admin</p>
+        <p class="text-xs text-amber-600 mt-0.5">User yang ditambah di sini menggunakan Supabase Admin API. Pastikan service_role key dikonfigurasi dengan benar di backend/edge function.</p>
+      </div>
+    </div>
+
+    <!-- User cards grid -->
+    <div id="userGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3 fade-up"></div>
+  </div>
+</main>
+
+<!-- Add User Modal -->
+<div id="addModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)">
+  <div class="card rounded-2xl w-full max-w-sm p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-bold text-bright">Tambah User Kasir</h3>
+      <button onclick="closeAddModal()" class="text-muted hover:text-bright"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-muted mb-1.5">Email *</label>
+        <input id="newEmail" type="email" placeholder="kasir@cafe.com" class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-muted mb-1.5">Password *</label>
+        <input id="newPassword" type="password" placeholder="Min. 6 karakter" class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-muted mb-1.5">Role</label>
+        <select id="newRole" class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
+          <option value="kasir">Kasir</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="p-3 rounded-xl text-xs text-muted" style="background:#0f0f0f;border:1px solid #2a2a2a">
+        💡 Untuk membuat user baru via Supabase Auth, gunakan <strong class="text-bright">Admin API</strong> atau aktifkan sign-up di Supabase Dashboard.
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeAddModal()" class="flex-1 py-2.5 rounded-xl border border-border text-sm text-muted hover:text-bright">Batal</button>
+      <button onclick="addUser()" id="addBtn" class="flex-1 btn-primary py-2.5 rounded-xl text-white text-sm font-semibold">Tambah</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete user confirm -->
+<div id="delUserModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7)">
+  <div class="card rounded-2xl p-6 w-full max-w-sm">
+    <div class="w-12 h-12 rounded-2xl bg-red-900/40 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </div>
+    <h3 class="text-center font-bold text-bright mb-1">Hapus User?</h3>
+    <p class="text-center text-sm text-muted mb-5" id="delUserEmail">—</p>
+    <div class="flex gap-3">
+      <button onclick="closeDelUser()" class="flex-1 py-2.5 rounded-xl border border-border text-sm text-muted hover:text-bright">Batal</button>
+      <button onclick="confirmDelUser()" class="flex-1 py-2.5 rounded-xl bg-red-900/60 text-red-300 text-sm font-semibold hover:bg-red-800/60">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+let users = [];
+let delUserId = null;
+
+async function initUsers() {
+  const session = await requireAuth();
+  if (!session) return;
+  const ok = await requireAdmin();
+  if (!ok) return;
+  await loadUsers();
+}
+
+async function loadUsers() {
+  const { data, error } = await sb.from('users').select('*').order('role');
+  if (error) return showToast('Gagal memuat users', 'error');
+  users = data || [];
+  document.getElementById('userCount').textContent = `${users.length} user terdaftar`;
+  renderUsers();
+}
+
+function renderUsers() {
+  const grid = document.getElementById('userGrid');
+  const currentEmail = localStorage.getItem('userEmail');
+
+  if (!users.length) {
+    grid.innerHTML = '<div class="col-span-2 text-center py-12 text-muted text-sm">Tidak ada user</div>';
+    return;
+  }
+
+  grid.innerHTML = users.map(u => `
+    <div class="card rounded-2xl p-4 flex items-center gap-4">
+      <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${u.role === 'admin' ? 'bg-emerald-900/50 text-accent' : 'bg-blue-900/50 text-blue-400'}">
+        ${(u.email || '?')[0].toUpperCase()}
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-bright truncate">${u.email}</p>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium ${u.role === 'admin' ? 'bg-emerald-900/50 text-accent' : 'bg-blue-900/50 text-blue-400'} capitalize">${u.role}</span>
+          ${u.email === currentEmail ? '<span class="text-xs text-muted">(Anda)</span>' : ''}
+        </div>
+      </div>
+      ${u.email !== currentEmail ? `
+        <button onclick="openDelUser('${u.id}','${u.email}')" class="flex-shrink-0 p-2 rounded-xl text-muted hover:text-red-400 hover:bg-red-900/20 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function openAddModal() {
+  document.getElementById('addModal').classList.remove('hidden');
+  document.getElementById('addModal').classList.add('flex');
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.add('hidden');
+  document.getElementById('addModal').classList.remove('flex');
+  document.getElementById('newEmail').value = '';
+  document.getElementById('newPassword').value = '';
+}
+
+async function addUser() {
+  const email = document.getElementById('newEmail').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const role = document.getElementById('newRole').value;
+
+  if (!email || !password) return showToast('Email dan password wajib diisi', 'error');
+  if (password.length < 6) return showToast('Password minimal 6 karakter', 'error');
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true; btn.textContent = 'Memproses...';
+
+  try {
+    // Signup the user (requires email confirmation disabled in Supabase or use Admin API)
+    const { data, error } = await sb.auth.signUp({ email, password });
+    if (error) throw error;
+
+    if (data.user) {
+      // Insert into users table
+      await sb.from('users').upsert({ id: data.user.id, email, role });
+      showToast('User berhasil ditambahkan', 'success');
+      closeAddModal();
+      await loadUsers();
+    } else {
+      showToast('Cek email konfirmasi untuk verifikasi akun', 'info');
+    }
+  } catch (err) {
+    showToast('Gagal menambahkan user: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Tambah';
+  }
+}
+
+function openDelUser(id, email) {
+  delUserId = id;
+  document.getElementById('delUserEmail').textContent = email;
+  document.getElementById('delUserModal').classList.remove('hidden');
+  document.getElementById('delUserModal').classList.add('flex');
+}
+
+function closeDelUser() {
+  delUserId = null;
+  document.getElementById('delUserModal').classList.add('hidden');
+  document.getElementById('delUserModal').classList.remove('flex');
+}
+
+async function confirmDelUser() {
+  if (!delUserId) return;
+  try {
+    // Remove from users table (Auth deletion requires Admin API / service role)
+    const { error } = await sb.from('users').delete().eq('id', delUserId);
+    if (error) throw error;
+    showToast('User dihapus dari tabel', 'success');
+    closeDelUser();
+    await loadUsers();
+  } catch (err) {
+    showToast('Gagal hapus: ' + err.message, 'error');
+  }
+}
+
+initUsers();
+</script>
+</body>
+</html>
