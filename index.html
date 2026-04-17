@@ -3,223 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KasirKu POS — Aplikasi kasir cocok buat UMKM</title>
+    <title>KasirKu POS — Dokumentasi Sistem & Fitur Lengkap</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
     <style>
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #020617; /* Slate 950 */
-        }
-        .glass { 
-            background: rgba(15, 23, 42, 0.8); 
-            backdrop-filter: blur(12px); 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .hero-gradient { 
-            background: radial-gradient(circle at top right, #064e3b 0%, #020617 100%); 
-        }
-        .card-dark {
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-        }
-        .card-dark:hover {
-            border-color: #10b981; /* Emerald 500 */
-            transform: translateY(-5px);
-            background: rgba(30, 41, 59, 0.8);
-        }
-        .text-gradient {
-            background: linear-gradient(to right, #10b981, #34d399);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #cbd5e1; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-header { background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .card-inner { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 1.25rem; }
+        .emerald-text { color: #10b981; }
+        .emerald-bg { background-color: #10b981; }
+        .section-tight { padding: 3rem 0; }
+        .status-badge { font-size: 9px; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase; }
     </style>
 </head>
-<body class="text-slate-200 overflow-x-hidden">
+<body class="antialiased">
 
-    <nav class="fixed w-full z-50 glass">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <nav class="fixed w-full z-50 glass-header h-14 flex items-center">
+        <div class="max-w-7xl mx-auto px-6 w-full flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <div class="bg-emerald-600 p-2 rounded-lg text-white shadow-lg shadow-emerald-900/20">
-                    <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                <div class="w-6 h-6 emerald-bg rounded flex items-center justify-center">
+                    <i data-lucide="terminal" class="text-white w-4 h-4"></i>
                 </div>
-                <span class="text-xl font-extrabold tracking-tight text-white">KasirKu <span class="text-emerald-500">POS</span></span>
+                <span class="text-md font-extrabold tracking-tighter uppercase italic text-white">Kasir<span class="emerald-text">Ku</span> <span class="text-[10px] opacity-50 font-normal">v1.0</span></span>
             </div>
-            <div class="hidden md:flex gap-8 font-medium text-slate-400">
-                <a href="#fitur" class="hover:text-emerald-400 transition">Fitur</a>
-                <a href="#teknologi" class="hover:text-emerald-400 transition">Teknologi</a>
-                <a href="#dukungan" class="hover:text-emerald-400 transition">Dukungan</a>
+            <div class="hidden lg:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <a href="#ekosistem" class="hover:text-emerald-400 transition">Ekosistem</a>
+                <a href="#fitur-detail" class="hover:text-emerald-400 transition">Fitur Detail</a>
+                <a href="#database" class="hover:text-emerald-400 transition">Database</a>
+                <a href="#panduan" class="hover:text-emerald-400 transition">Panduan</a>
             </div>
-            <a href="login.html" class="bg-emerald-600 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/40">
-                Buka Aplikasi
+            <a href="login.html" class="px-4 py-1.5 bg-emerald-600 text-white rounded text-[11px] font-bold hover:bg-emerald-500 transition shadow-lg">
+                RUN APPLICATION
             </a>
         </div>
     </nav>
 
-    <section class="relative pt-40 pb-24 hero-gradient overflow-hidden">
-        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-600/10 blur-[120px] rounded-full -mr-48 -mt-48"></div>
-        
-        <div class="max-w-7xl mx-auto px-6 text-center lg:text-left lg:flex items-center relative z-10">
-            <div class="lg:w-1/2" data-aos="fade-right">
-                <span class="inline-block px-4 py-1.5 mb-6 text-sm font-semibold tracking-wide text-emerald-400 uppercase bg-emerald-950/50 border border-emerald-800/50 rounded-full">
-                    🟢 Cloud Native POS System
-                </span>
-                <h1 class="text-5xl lg:text-7xl font-extrabold leading-tight mb-6 text-white">
-                    Kelola Bisnis <br> <span class="text-gradient">Lebih Modern.</span>
+    <header class="pt-24 pb-12 px-6 border-b border-white/5 bg-[radial-gradient(circle_at_top_right,_#10b98108_0%,_transparent_40%)]">
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <div data-aos="fade-right">
+                <h1 class="text-4xl lg:text-5xl font-black text-white leading-tight mb-4">
+                    Pusat Komando <br><span class="emerald-text italic">Bisnis Retail Anda.</span>
                 </h1>
-                <p class="text-lg text-slate-400 mb-10 max-w-lg mx-auto lg:mx-0">
-                    Aplikasi kasir ringan berbasis web dengan database real-time. Cocok untuk Cafe, Resto, dan UMKM yang ingin serba digital.
+                <p class="text-sm text-slate-400 leading-relaxed mb-6 max-w-xl">
+                    Sistem manajemen penjualan terpadu yang menggabungkan kecepatan <b>Vanilla JavaScript</b> dengan ketangguhan <b>Supabase Cloud</b>. Dirancang khusus untuk operasional cafe, resto, dan UMKM yang membutuhkan akurasi data real-time.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <a href="login.html" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-emerald-500 transition transform hover:scale-105 shadow-xl shadow-emerald-900/20">
-                        Mulai Sekarang <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                    </a>
-                    <a href="#fitur" class="flex items-center justify-center gap-2 bg-slate-900 border border-slate-700 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:border-emerald-500 transition">
-                        Lihat Fitur
-                    </a>
+                <div class="grid grid-cols-3 gap-4 border-l-2 border-emerald-900/50 pl-6">
+                    <div><p class="text-white font-bold text-lg">Real-time</p><p class="text-[10px] uppercase text-slate-500">Database Sync</p></div>
+                    <div><p class="text-white font-bold text-lg">Secure</p><p class="text-[10px] uppercase text-slate-500">Auth System</p></div>
+                    <div><p class="text-white font-bold text-lg">Scalable</p><p class="text-[10px] uppercase text-slate-500">Cloud Storage</p></div>
                 </div>
             </div>
-            <div class="lg:w-1/2 mt-16 lg:mt-0 relative" data-aos="fade-left">
-                <div class="relative group">
-                    <div class="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                    <img src="demo.png" 
-                         alt="POS App Preview" 
-                         class="relative rounded-3xl shadow-2xl border border-slate-800 grayscale-[20%] group-hover:grayscale-0 transition duration-500">
+            <div class="card-inner border-emerald-500/20" data-aos="fade-left">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xs font-bold text-emerald-500 mono tracking-tighter">/sys/structure.log</span>
+                    <span class="status-badge bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Active Deployment</span>
+                </div>
+                <div class="space-y-2 mono text-[11px] text-slate-400 leading-tight">
+                    <p><span class="text-emerald-700">├──</span> 📁 <span class="text-white">core/</span> <span class="opacity-40 italic">// App.js logic</span></p>
+                    <p><span class="text-emerald-700">├──</span> 📁 <span class="text-white">views/</span> <span class="opacity-40 italic">// Dashboard, Kasir, Produk</span></p>
+                    <p><span class="text-emerald-700">├──</span> 📁 <span class="text-white">reports/</span> <span class="opacity-40 italic">// Transaksi, CSV Export</span></p>
+                    <p><span class="text-emerald-700">└──</span> 📁 <span class="text-white">admin/</span> <span class="opacity-40 italic">// User Management</span></p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="fitur-detail" class="section-tight px-6 max-w-7xl mx-auto">
+        <h2 class="text-xl font-extrabold text-white mb-8 flex items-center gap-2 italic uppercase">
+            <i data-lucide="list-checks" class="text-emerald-500"></i> Kapabilitas Sistem Lengkap
+        </h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="card-inner">
+                <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="shopping-bag" class="w-4 h-4 text-emerald-500"></i> MODUL TRANSAKSI
+                </h4>
+                <ul class="text-[11px] space-y-2 text-slate-400">
+                    <li class="flex justify-between"><span>Keranjang Belanja Dinamis</span> <span class="text-emerald-500">READY</span></li>
+                    <li class="flex justify-between"><span>Payment Multi-Method</span> <span class="text-emerald-500">READY</span></li>
+                    <li class="flex justify-between"><span>Auto-Calculated Change</span> <span class="text-emerald-500">READY</span></li>
+                    <li class="flex justify-between"><span>Thermal Struk Printing</span> <span class="text-emerald-500">READY</span></li>
+                </ul>
+            </div>
+            <div class="card-inner">
+                <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="settings" class="w-4 h-4 text-emerald-500"></i> MODul ADMINISTRASI
+                </h4>
+                <ul class="text-[11px] space-y-2 text-slate-400">
+                    <li class="flex justify-between"><span>CRUD Inventaris Produk</span> <span class="text-emerald-500">READY</span></li>
+                    <li class="flex justify-between"><span>User Management (Admin/Kasir)</span> <span class="text-emerald-500">READY</span></li>
+                    <li class="flex justify-between"><span>Product Image Cloud Sync</span> <span class="text-emerald-500">READY</span></li>
+                    <li class="flex justify-between"><span>Export Data CSV/Excel</span> <span class="text-emerald-500">READY</span></li>
+                </ul>
+            </div>
+            <div class="card-inner">
+                <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-500"></i> MODUL ANALISA
+                </h4>
+                <ul class="text-[11px] space-y-2 text-slate-400">
+                    <li class="flex justify-between"><span>Grafik Penjualan 7 Hari</span> <span class="text-emerald-500">CHART.JS</span></li>
+                    <li class="flex justify-between"><span>Filter Riwayat Tanggal</span> <span class="text-emerald-500">READY</span></li>
+                    <li class="flex justify-between"><span>Notifikasi Stok Rendah</span> <span class="text-emerald-500">ALERTS</span></li>
+                    <li class="flex justify-between"><span>Summary Omzet Harian</span> <span class="text-emerald-500">LIVE</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="database" class="section-tight bg-slate-950/50 border-y border-white/5 px-6">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-xl font-extrabold text-white mb-8 italic uppercase tracking-tighter">Relasi Database (Schema.sql)</h2>
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div class="card-inner mono text-[10px] bg-black">
+                    <p class="text-emerald-500 mb-2">-- Tabel Produk</p>
+                    <p>CREATE TABLE <span class="text-white">produk</span> (</p>
+                    <p class="pl-4">id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),</p>
+                    <p class="pl-4">nama TEXT NOT NULL,</p>
+                    <p class="pl-4">harga NUMERIC NOT NULL,</p>
+                    <p class="pl-4">stok INTEGER DEFAULT 0,</p>
+                    <p class="pl-4">image_url TEXT</p>
+                    <p>);</p>
+                </div>
+                <div class="card-inner mono text-[10px] bg-black">
+                    <p class="text-emerald-500 mb-2">-- Tabel Transaksi</p>
+                    <p>CREATE TABLE <span class="text-white">transaksi</span> (</p>
+                    <p class="pl-4">id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),</p>
+                    <p class="pl-4">total_harga NUMERIC,</p>
+                    <p class="pl-4">metode_bayar TEXT,</p>
+                    <p class="pl-4">kasir_id UUID REFERENCES auth.users(id)</p>
+                    <p>);</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="fitur" class="py-24 bg-slate-950">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-20" data-aos="fade-up">
-                <h2 class="text-4xl font-bold mb-4 text-white">Fitur Unggulan</h2>
-                <div class="w-20 h-1 bg-emerald-500 mx-auto rounded-full mb-6"></div>
-                <p class="text-slate-400 max-w-2xl mx-auto">Satu solusi untuk semua kebutuhan manajemen operasional harian Anda.</p>
+    <section id="panduan" class="section-tight px-6 max-w-7xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-12">
+            <div>
+                <h3 class="text-lg font-bold text-white mb-6 uppercase italic">Prosedur Implementasi</h3>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-sm shrink-0">1</div>
+                        <div><p class="text-xs font-bold text-white uppercase">Cloud Instance</p><p class="text-[11px] text-slate-500">Buat project baru di Supabase Dashboard untuk akses API.</p></div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-sm shrink-0">2</div>
+                        <div><p class="text-xs font-bold text-white uppercase">Schema Execution</p><p class="text-[11px] text-slate-500">Eksekusi SQL editor dengan script yang tersedia di schema.sql.</p></div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-sm shrink-0">3</div>
+                        <div><p class="text-xs font-bold text-white uppercase">Global Variable</p><p class="text-[11px] text-slate-500">Sematkan URL & Anon Key ke dalam `app.js` sebagai jembatan sistem.</p></div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="p-8 rounded-3xl card-dark" data-aos="fade-up" data-aos-delay="100">
-                    <div class="w-14 h-14 bg-emerald-950/50 text-emerald-500 border border-emerald-900/50 rounded-2xl flex items-center justify-center mb-6">
-                        <i data-lucide="zap" class="w-7 h-7"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Cepat & Ringan</h3>
-                    <p class="text-slate-400">Single-file architecture memastikan aplikasi berjalan sangat cepat tanpa loading lama.</p>
-                </div>
-                <div class="p-8 rounded-3xl card-dark" data-aos="fade-up" data-aos-delay="200">
-                    <div class="w-14 h-14 bg-emerald-950/50 text-emerald-500 border border-emerald-900/50 rounded-2xl flex items-center justify-center mb-6">
-                        <i data-lucide="database" class="w-7 h-7"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Database Real-time</h3>
-                    <p class="text-slate-400">Integrasi Supabase membuat sinkronisasi data antar perangkat terjadi dalam hitungan milidetik.</p>
-                </div>
-                <div class="p-8 rounded-3xl card-dark" data-aos="fade-up" data-aos-delay="300">
-                    <div class="w-14 h-14 bg-emerald-950/50 text-emerald-500 border border-emerald-900/50 rounded-2xl flex items-center justify-center mb-6">
-                        <i data-lucide="bar-chart-3" class="w-7 h-7"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Analisa Penjualan</h3>
-                    <p class="text-slate-400">Pantau performa cafe Anda dengan grafik interaktif harian yang mudah dipahami.</p>
-                </div>
+            <div class="bg-emerald-600 rounded-2xl p-8 flex flex-col justify-center items-center text-center">
+                <i data-lucide="rocket" class="w-12 h-12 text-white mb-4 animate-bounce"></i>
+                <h3 class="text-2xl font-black text-white italic mb-2">SIAP BERAKSI?</h3>
+                <p class="text-emerald-100 text-xs mb-6 opacity-80">Jalankan sistem sekarang dan rasakan transformasi digital pada UMKM Anda hari ini.</p>
+                <a href="login.html" class="w-full py-3 bg-white text-emerald-700 font-black rounded-lg hover:bg-emerald-50 transition tracking-widest text-sm">LAUNCH SYSTEM</a>
             </div>
         </div>
     </section>
 
-    <section id="teknologi" class="py-24 bg-slate-900/50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex flex-col lg:flex-row items-center gap-16">
-                <div class="lg:w-1/2 order-2 lg:order-1" data-aos="fade-right">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800">
-                            <p class="text-emerald-500 font-mono text-sm mb-1">UI/UX</p>
-                            <p class="text-white font-bold italic">Tailwind CSS</p>
-                        </div>
-                        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800">
-                            <p class="text-emerald-500 font-mono text-sm mb-1">Backend</p>
-                            <p class="text-white font-bold italic">Supabase</p>
-                        </div>
-                        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800">
-                            <p class="text-emerald-500 font-mono text-sm mb-1">Logic</p>
-                            <p class="text-white font-bold italic">Vanilla JS</p>
-                        </div>
-                        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800">
-                            <p class="text-emerald-500 font-mono text-sm mb-1">Hosting</p>
-                            <p class="text-white font-bold italic">Vercel</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="lg:w-1/2 order-1 lg:order-2" data-aos="fade-left">
-                    <h2 class="text-4xl font-bold mb-6 text-white">Tech Stack yang <br> Solid & Scalable.</h2>
-                    <p class="text-slate-400 text-lg mb-8 leading-relaxed">
-                        Dibuat menggunakan teknologi terkini yang tidak memerlukan proses kompilasi berat. Deploy dalam hitungan detik, jalankan selamanya.
-                    </p>
-                    <div class="flex items-center gap-4 text-emerald-500 font-bold">
-                        <i data-lucide="shield-check"></i>
-                        <span>Keamanan Data Terjamin</span>
-                    </div>
-                </div>
+    <footer class="py-12 border-t border-white/5 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">
+            <div class="flex items-center gap-2 mb-4 md:mb-0">
+                <span class="text-white tracking-tighter italic">Kasir<span class="emerald-text">Ku</span></span>
+                <span class="text-slate-700">|</span>
+                <span>IBDIGITAL ID SOLUTION</span>
             </div>
-        </div>
-    </section>
-
-    <footer id="dukungan" class="py-16 bg-slate-950 border-t border-slate-900">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div class="text-center md:text-left">
-                <div class="flex items-center gap-2 mb-4 justify-center md:justify-start">
-                    <div class="bg-emerald-600 p-1.5 rounded text-white">
-                        <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-                    </div>
-                    <span class="font-bold text-white text-lg tracking-tight">KasirKu <span class="text-emerald-500">POS</span></span>
-                </div>
-                <p class="text-slate-500 max-w-xs leading-relaxed">
-                    Membantu UMKM Indonesia bertransformasi ke arah digital dengan sistem kasir yang mudah dan handal.
-                </p>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-emerald-500">Instagram</a>
+                <a href="#" class="hover:text-emerald-500">GitHub</a>
+                <span class="text-slate-800">2026 Edition</span>
             </div>
-            
-            <div class="text-center md:text-right">
-                <p class="text-slate-400 text-sm mb-2 font-semibold">Dikembangkan oleh</p>
-                <h4 class="text-xl font-black text-emerald-500 italic mb-4">IBDIGITAL ID</h4>
-                <div class="flex gap-4 justify-center md:justify-end">
-                    <a href="#" class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:text-emerald-500 transition border border-slate-800">
-                        <i data-lucide="globe" class="w-5 h-5"></i>
-                    </a>
-                    <a href="#" class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:text-emerald-500 transition border border-slate-800">
-                        <i data-lucide="github" class="w-5 h-5"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="mt-16 text-center text-slate-600 text-xs border-t border-slate-900/50 pt-8">
-            &copy; 2024 KasirKu POS. Build with passion for local business.
         </div>
     </footer>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        // Init Icons
         lucide.createIcons();
+        AOS.init({ duration: 500, once: true });
         
-        // Init AOS
-        AOS.init({
-            duration: 800,
-            once: true,
-            easing: 'ease-out-cubic'
-        });
-
-        // Navbar Scroll Logic
-        window.addEventListener('scroll', () => {
+        window.onscroll = function() {
             const nav = document.querySelector('nav');
-            if (window.scrollY > 50) {
-                nav.style.backgroundColor = 'rgba(2, 6, 23, 0.95)';
-                nav.style.boxShadow = '0 10px 30px -10px rgba(0,0,0,0.5)';
+            if (window.scrollY > 20) {
+                nav.classList.add('h-12', 'bg-dark/95');
+                nav.classList.remove('h-14');
             } else {
-                nav.style.backgroundColor = 'rgba(15, 23, 42, 0.8)';
-                nav.style.boxShadow = 'none';
+                nav.classList.add('h-14');
+                nav.classList.remove('h-12');
             }
-        });
+        };
     </script>
 </body>
 </html>
